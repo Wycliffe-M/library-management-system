@@ -27,3 +27,10 @@ Each `Book` stores a `genreId` foreign key that points to a row in the `Genre` t
 - **`Role` enum (`PATRON`, `LIBRARIAN`).** A user's role can only be one of these two values, so invalid roles are rejected by the database.
 - **`totalCopies` and `availableCopies`.** Separate fields let the system track how many copies exist and how many can currently be borrowed.
 - **Unique fields.** `isbn` on `Book`, `email` on `User`, and `name` and `slug` on `Genre` are unique, to prevent duplicate records.
+- **`Review` model.** Links `Book` and `User`. `@@unique([bookId, userId])` limits each user to one review per book, and `comment` is optional.
+
+### Prisma vs. a document database
+
+One difference I noticed while modeling:
+
+In MongoDB I would probably have stored a book's reviews as an array inside the book document. In Prisma, a `Review` is its own table with `bookId` and `userId` foreign keys, and `Book.reviews` and `User.reviews` are only the "other side" of the relation. The relation is declared in the schema and the database enforces it, whereas in MongoDB that link would be a convention my code had to keep consistent.
