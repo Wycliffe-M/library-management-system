@@ -2,6 +2,61 @@
 
 A full-stack library management system built with React and NestJS.
 
+## Assignment Verification
+
+All required files are committed on the `main` branch, inside the `api/` folder:
+
+```
+library-management-system/
+├── README.md
+└── api/
+    ├── .env.example                  <- DATABASE_URL placeholder
+    ├── prisma/
+    │   ├── schema.prisma             <- Role enum, User, Genre, Book, Review
+    │   ├── seed.ts                   <- 4 genres, 16 books
+    │   └── migrations/
+    │       ├── 20261107155130_init
+    │       └── 20261107164536_add_review
+    └── src/
+        └── prisma/
+            ├── prisma.module.ts
+            └── prisma.service.ts     <- extends PrismaClient, OnModuleInit
+```
+
+| Requirement | File |
+|---|---|
+| Role enum, User, Genre, Book with `genreId` @relation | [api/prisma/schema.prisma](https://raw.githubusercontent.com/Wycliffe-M/library-management-system/main/api/prisma/schema.prisma) |
+| 4 genres, 16 books seeded | [api/prisma/seed.ts](https://raw.githubusercontent.com/Wycliffe-M/library-management-system/main/api/prisma/seed.ts) |
+| PrismaService extends PrismaClient, OnModuleInit, `$connect()` | [api/src/prisma/prisma.service.ts](https://raw.githubusercontent.com/Wycliffe-M/library-management-system/main/api/src/prisma/prisma.service.ts) |
+| `DATABASE_URL` placeholder | [api/.env.example](https://raw.githubusercontent.com/Wycliffe-M/library-management-system/main/api/.env.example) |
+| Why Book references Genre | [Schema Decisions](#schema-decisions) |
+| Stretch: Review model | `Review` model in `schema.prisma`, with `@@unique([bookId, userId])` |
+| Stretch: Prisma vs. a document database | [Prisma vs. a document database](#prisma-vs-a-document-database) |
+
+Migrations are also committed: `api/prisma/migrations/20261107155130_init` and `20261107164536_add_review`.
+
+### How the seed links books to genres
+
+The seed links each book to its genre through the `genreId` foreign key. It first upserts the genres and records each genre's `id`, keyed by slug. Each book then carries a `genreSlug` (a lookup key only, not a database field), and the seed uses it to find the right id and set `genreId` when creating the book.
+
+### How to verify
+
+From the repo root:
+
+```
+cd api
+npm install
+cp .env.example .env     # then put your own PostgreSQL credentials in DATABASE_URL
+npx prisma migrate dev
+npx prisma db seed
+```
+
+Expected seed output:
+
+```
+Seeded 4 genres and 16 books.
+```
+
 ## Setup (API)
 
 1. `cd api`
@@ -104,130 +159,34 @@ model Review {
 [View file](https://github.com/Wycliffe-M/library-management-system/blob/main/api/prisma/seed.ts)
 
 ```ts
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 const genres = [
-  { name: "Fantasy", slug: "fantasy" },
-  { name: "Science Fiction", slug: "science-fiction" },
-  { name: "Mystery", slug: "mystery" },
-  { name: "Non-Fiction", slug: "non-fiction" },
+  { name: 'Fantasy', slug: 'fantasy' },
+  { name: 'Science Fiction', slug: 'science-fiction' },
+  { name: 'Mystery', slug: 'mystery' },
+  { name: 'Non-Fiction', slug: 'non-fiction' },
 ];
 
 const books = [
-  {
-    title: "The Hobbit",
-    author: "J.R.R. Tolkien",
-    isbn: "9780547928227",
-    genre: "fantasy",
-    copies: 4,
-  },
-  {
-    title: "A Wizard of Earthsea",
-    author: "Ursula K. Le Guin",
-    isbn: "9780547773742",
-    genre: "fantasy",
-    copies: 3,
-  },
-  {
-    title: "The Name of the Wind",
-    author: "Patrick Rothfuss",
-    isbn: "9780756404741",
-    genre: "fantasy",
-    copies: 2,
-  },
-  {
-    title: "Dune",
-    author: "Frank Herbert",
-    isbn: "9780441172719",
-    genre: "science-fiction",
-    copies: 5,
-  },
-  {
-    title: "Neuromancer",
-    author: "William Gibson",
-    isbn: "9780441569595",
-    genre: "science-fiction",
-    copies: 2,
-  },
-  {
-    title: "The Left Hand of Darkness",
-    author: "Ursula K. Le Guin",
-    isbn: "9780441478125",
-    genre: "science-fiction",
-    copies: 3,
-  },
-  {
-    title: "Foundation",
-    author: "Isaac Asimov",
-    isbn: "9780553293357",
-    genre: "science-fiction",
-    copies: 4,
-  },
-  {
-    title: "Murder on the Orient Express",
-    author: "Agatha Christie",
-    isbn: "9780062693662",
-    genre: "mystery",
-    copies: 3,
-  },
-  {
-    title: "The Hound of the Baskervilles",
-    author: "Arthur Conan Doyle",
-    isbn: "9780486282145",
-    genre: "mystery",
-    copies: 2,
-  },
-  {
-    title: "Gone Girl",
-    author: "Gillian Flynn",
-    isbn: "9780307588371",
-    genre: "mystery",
-    copies: 3,
-  },
-  {
-    title: "The Big Sleep",
-    author: "Raymond Chandler",
-    isbn: "9780394758282",
-    genre: "mystery",
-    copies: 2,
-  },
-  {
-    title: "Sapiens",
-    author: "Yuval Noah Harari",
-    isbn: "9780062316110",
-    genre: "non-fiction",
-    copies: 4,
-  },
-  {
-    title: "Educated",
-    author: "Tara Westover",
-    isbn: "9780399590504",
-    genre: "non-fiction",
-    copies: 3,
-  },
-  {
-    title: "Atomic Habits",
-    author: "James Clear",
-    isbn: "9780735211292",
-    genre: "non-fiction",
-    copies: 5,
-  },
-  {
-    title: "The Pragmatic Programmer",
-    author: "Andrew Hunt",
-    isbn: "9780135957059",
-    genre: "non-fiction",
-    copies: 2,
-  },
-  {
-    title: "Clean Code",
-    author: "Robert C. Martin",
-    isbn: "9780132350884",
-    genre: "non-fiction",
-    copies: 3,
-  },
+  { title: 'The Hobbit', author: 'J.R.R. Tolkien', isbn: '9780547928227', genreSlug: 'fantasy', copies: 4 },
+  { title: 'A Wizard of Earthsea', author: 'Ursula K. Le Guin', isbn: '9780547773742', genreSlug: 'fantasy', copies: 3 },
+  { title: 'The Name of the Wind', author: 'Patrick Rothfuss', isbn: '9780756404741', genreSlug: 'fantasy', copies: 2 },
+  { title: 'Dune', author: 'Frank Herbert', isbn: '9780441172719', genreSlug: 'science-fiction', copies: 5 },
+  { title: 'Neuromancer', author: 'William Gibson', isbn: '9780441569595', genreSlug: 'science-fiction', copies: 2 },
+  { title: 'The Left Hand of Darkness', author: 'Ursula K. Le Guin', isbn: '9780441478125', genreSlug: 'science-fiction', copies: 3 },
+  { title: 'Foundation', author: 'Isaac Asimov', isbn: '9780553293357', genreSlug: 'science-fiction', copies: 4 },
+  { title: 'Murder on the Orient Express', author: 'Agatha Christie', isbn: '9780062693662', genreSlug: 'mystery', copies: 3 },
+  { title: 'The Hound of the Baskervilles', author: 'Arthur Conan Doyle', isbn: '9780486282145', genreSlug: 'mystery', copies: 2 },
+  { title: 'Gone Girl', author: 'Gillian Flynn', isbn: '9780307588371', genreSlug: 'mystery', copies: 3 },
+  { title: 'The Big Sleep', author: 'Raymond Chandler', isbn: '9780394758282', genreSlug: 'mystery', copies: 2 },
+  { title: 'Sapiens', author: 'Yuval Noah Harari', isbn: '9780062316110', genreSlug: 'non-fiction', copies: 4 },
+  { title: 'Educated', author: 'Tara Westover', isbn: '9780399590504', genreSlug: 'non-fiction', copies: 3 },
+  { title: 'Atomic Habits', author: 'James Clear', isbn: '9780735211292', genreSlug: 'non-fiction', copies: 5 },
+  { title: 'The Pragmatic Programmer', author: 'Andrew Hunt', isbn: '9780135957059', genreSlug: 'non-fiction', copies: 2 },
+  { title: 'Clean Code', author: 'Robert C. Martin', isbn: '9780132350884', genreSlug: 'non-fiction', copies: 3 },
 ];
 
 async function main() {
@@ -253,7 +212,7 @@ async function main() {
         isbn: b.isbn,
         totalCopies: b.copies,
         availableCopies: b.copies,
-        genreId: genreIds[b.genre],
+        genreId: genreIds[b.genreSlug],
       },
     });
   }
